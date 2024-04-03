@@ -28,7 +28,7 @@ except ImportError:
 def maybe_get_torch():
     if torch is None:
         bittensor.logging.warning(
-            "Error: This command requires torch. Please install torch package."
+            "This command requires torch. Please install torch package."
         )
     return torch
 
