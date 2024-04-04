@@ -20,13 +20,14 @@
 
 import numpy as np
 import bittensor
+from numpy.typing import NDArray
 from typing import Tuple, List
 
 U32_MAX = 4294967295
 U16_MAX = 65535
 
 
-def normalize_max_weight(x: np.float32, limit: float = 0.1) -> "np.float32":
+def normalize_max_weight(x: NDArray[np.float32], limit: float = 0.1) -> NDArray[np.float32]:
     r"""Normalizes the tensor x so that sum(x) = 1 and the max value is not greater than the limit.
     Args:
         x (:obj:`np.float32`):
@@ -75,7 +76,7 @@ def normalize_max_weight(x: np.float32, limit: float = 0.1) -> "np.float32":
 
 def convert_weight_uids_and_vals_to_tensor(
     n: int, uids: List[int], weights: List[int]
-) -> "np.float32":
+) -> NDArray[np.float32]:
     r"""Converts weights and uids from chain representation into a np.array (inverse operation from convert_weights_and_uids_for_emit)
     Args:
         n: int:
@@ -101,7 +102,7 @@ def convert_weight_uids_and_vals_to_tensor(
 
 def convert_root_weight_uids_and_vals_to_tensor(
     n: int, uids: List[int], weights: List[int], subnets: List[int]
-) -> "np.float32":
+) -> NDArray[np.float32]:
     r"""Converts root weights and uids from chain representation into a np.array (inverse operation from convert_weights_and_uids_for_emit)
     Args:
         n: int:
@@ -134,7 +135,7 @@ def convert_root_weight_uids_and_vals_to_tensor(
 
 def convert_bond_uids_and_vals_to_tensor(
     n: int, uids: List[int], bonds: List[int]
-) -> "np.int64":
+) -> NDArray[np.int64]:
     r"""Converts bond and uids from chain representation into a np.array.
     Args:
         n: int:
@@ -154,7 +155,7 @@ def convert_bond_uids_and_vals_to_tensor(
 
 
 def convert_weights_and_uids_for_emit(
-    uids: np.int64, weights: np.float32
+    uids: NDArray[np.int64], weights: NDArray[np.float32]
 ) -> Tuple[List[int], List[int]]:
     r"""Converts weights into integer u32 representation that sum to MAX_INT_WEIGHT.
     Args:
@@ -207,13 +208,13 @@ def convert_weights_and_uids_for_emit(
 
 
 def process_weights_for_netuid(
-    uids,
-    weights: np.array,
+    uids: NDArray[np.int64],
+    weights: NDArray[np.float32],
     netuid: int,
     subtensor: "bittensor.subtensor",
     metagraph: "bittensor.metagraph" = None,
     exclude_quantile: int = 0,
-) -> np.float32:
+) -> Tuple[NDArray[np.int64], NDArray[np.float32]]:
     bittensor.logging.debug("process_weights_for_netuid()")
     bittensor.logging.debug("weights", weights)
     bittensor.logging.debug("netuid", netuid)
@@ -221,12 +222,12 @@ def process_weights_for_netuid(
     bittensor.logging.debug("metagraph", metagraph)
 
     # Get latest metagraph from chain if metagraph is None.
-    if metagraph == None:
+    if metagraph is None:
         metagraph = subtensor.metagraph(netuid)
 
     # Cast weights to floats.
-    if not isinstance(weights, np.float32):
-        weights = weights.type(np.float32)
+    if weights.dtype != np.float32:
+        weights = weights.astype(np.float32)
 
     # Network configuration parameters from an subtensor.
     # These parameters determine the range of acceptable weights for each neuron.
@@ -238,16 +239,16 @@ def process_weights_for_netuid(
     bittensor.logging.debug("max_weight_limit", max_weight_limit)
 
     # Find all non zero weights.
-    non_zero_weight_idx = np.argwhere(weights > 0).squeeze(dim=1)
+    non_zero_weight_idx = np.argwhere(weights > 0).squeeze()
     non_zero_weight_uids = uids[non_zero_weight_idx]
     non_zero_weights = weights[non_zero_weight_idx]
-    if non_zero_weights.numel() == 0 or metagraph.n < min_allowed_weights:
+    if non_zero_weights.size == 0 or metagraph.n < min_allowed_weights:
         bittensor.logging.warning("No non-zero weights returning all ones.")
         final_weights = np.ones((metagraph.n), dtype=np.int64) / metagraph.n
         bittensor.logging.debug("final_weights", final_weights)
         return np.arange(len(final_weights)), final_weights
 
-    elif non_zero_weights.numel() < min_allowed_weights:
+    elif non_zero_weights.size < min_allowed_weights:
         bittensor.logging.warning(
             "No non-zero weights less then min allowed weight, returning all ones."
         )
@@ -269,7 +270,7 @@ def process_weights_for_netuid(
         non_zero_weights
     )
     exclude_quantile = min([quantile, max_exclude])
-    lowest_quantile = non_zero_weights.quantile(exclude_quantile)
+    lowest_quantile = np.quantile(non_zero_weights, exclude_quantile)
     bittensor.logging.debug("max_exclude", max_exclude)
     bittensor.logging.debug("exclude_quantile", exclude_quantile)
     bittensor.logging.debug("lowest_quantile", lowest_quantile)

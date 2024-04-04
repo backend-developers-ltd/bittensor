@@ -21,6 +21,7 @@ import bittensor
 import time
 import logging
 import numpy as np
+from numpy.typing import NDArray
 from rich.prompt import Confirm
 from typing import Union
 import bittensor.utils.weight_utils as weight_utils
@@ -101,8 +102,8 @@ def root_register_extrinsic(
 def set_root_weights_extrinsic(
     subtensor: "bittensor.subtensor",
     wallet: "bittensor.wallet",
-    netuids: Union[np.int64, list],
-    weights: Union[np.float32, list],
+    netuids: Union[NDArray[np.int64], list],
+    weights: Union[NDArray[np.float32], list],
     version_key: int = 0,
     wait_for_inclusion: bool = False,
     wait_for_finalization: bool = False,
@@ -115,7 +116,7 @@ def set_root_weights_extrinsic(
             Bittensor wallet object.
         netuids (List[int]):
             The ``netuid`` of the subnet to set weights for.
-        weights ( Union[np.float32, list]):
+        weights (Union[NDArray[np.float32], list]):
             Weights to set. These must be ``float`` s and must correspond to the passed ``netuid`` s.
         version_key (int):
             The version key of the validator.
@@ -143,10 +144,10 @@ def set_root_weights_extrinsic(
     non_zero_weight_idx = np.argwhere(weights > 0).squeeze(axis=1)
     non_zero_weight_uids = netuids[non_zero_weight_idx]
     non_zero_weights = weights[non_zero_weight_idx]
-    if non_zero_weights.numel() < min_allowed_weights:
+    if non_zero_weights.size < min_allowed_weights:
         raise ValueError(
             "The minimum number of weights required to set weights is {}, got {}".format(
-                min_allowed_weights, non_zero_weights.numel()
+                min_allowed_weights, non_zero_weights.size
             )
         )
 
