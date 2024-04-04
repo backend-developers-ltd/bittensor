@@ -20,6 +20,8 @@ import bittensor
 import bittensor.utils.networking as net
 from rich.prompt import Confirm
 from ..errors import MetadataError
+from typing import Optional
+from ..utils import Certificate
 
 
 def serve_extrinsic(
@@ -34,6 +36,7 @@ def serve_extrinsic(
     wait_for_inclusion: bool = False,
     wait_for_finalization=True,
     prompt: bool = False,
+    certificate: Optional[Certificate] = None,
 ) -> bool:
     r"""Subscribes a Bittensor endpoint to the subtensor chain.
 
@@ -44,6 +47,8 @@ def serve_extrinsic(
             Endpoint host port i.e., ``192.122.31.4``.
         port (int):
             Endpoint port number i.e., ``9221``.
+        certificate (str):
+            Certificate.
         protocol (int):
             An ``int`` representation of the protocol.
         netuid (int):
@@ -75,6 +80,7 @@ def serve_extrinsic(
         "protocol": protocol,
         "placeholder1": placeholder1,
         "placeholder2": placeholder2,
+        "certificate": certificate,
     }
     bittensor.logging.debug("Checking axon ...")
     neuron = subtensor.get_neuron_for_pubkey_and_subnet(
@@ -144,6 +150,7 @@ def serve_axon_extrinsic(
     wait_for_inclusion: bool = False,
     wait_for_finalization: bool = True,
     prompt: bool = False,
+    certificate: Optional[Certificate] = None,
 ) -> bool:
     r"""Serves the axon to the network.
 
@@ -197,6 +204,7 @@ def serve_axon_extrinsic(
         wait_for_inclusion=wait_for_inclusion,
         wait_for_finalization=wait_for_finalization,
         prompt=prompt,
+        certificate=certificate,
     )
     return serve_success
 
@@ -264,7 +272,6 @@ def publish_metadata(
 
 
 from retry import retry
-from typing import Optional
 
 
 def get_metadata(self, netuid: int, hotkey: str, block: Optional[int] = None) -> str:

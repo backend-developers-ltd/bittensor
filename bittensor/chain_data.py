@@ -28,6 +28,7 @@ from scalecodec.utils.ss58 import ss58_encode
 
 from .utils import networking as net, U16_MAX, U16_NORMALIZED_FLOAT
 from .utils.balance import Balance
+from .utils import Certificate
 
 custom_rpc_type_registry = {
     "types": {
@@ -65,6 +66,12 @@ custom_rpc_type_registry = {
                 ["validator_permits", "Vec<Compact<u16>>"],
                 ["return_per_1000", "Compact<u64>"],
                 ["total_daily_return", "Compact<u64>"],
+            ],
+        },
+        "NeuronCertificate": {
+            "type": "struct",
+            "type_mapping": [
+                ["certificate", "Vec<u8>"],
             ],
         },
         "NeuronInfo": {
@@ -286,6 +293,7 @@ class ChainDataType(Enum):
     StakeInfo = 6
     IPInfo = 7
     SubnetHyperparameters = 8
+    NeuronCertificate = 9
 
 
 # Constants
@@ -512,6 +520,22 @@ class NeuronInfo:
             neuron.emission = neuron.emission / RAOPERTAO
 
             return neuron
+
+
+# Dataclasses for chain data.
+@dataclass
+class NeuronCertificate:
+    r"""
+    Dataclass for neuron certificate.
+    """
+
+    certificate: Certificate
+
+    @classmethod
+    def from_vec_u8(cls, vec_u8: List[int]) -> "NeuronCertificate":
+        r"""Returns a NeuronCertificate object from a ``vec_u8``."""
+
+        return from_scale_encoding(vec_u8, ChainDataType.NeuronCertificate)
 
 
 @dataclass
