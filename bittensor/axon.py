@@ -42,6 +42,7 @@ from starlette.responses import Response
 from starlette.requests import Request
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from typing import List, Optional, Tuple, Callable, Any, Dict
+from .utils import Certificate
 
 from bittensor.errors import (
     InvalidRequestNameError,
@@ -822,7 +823,10 @@ class axon:
         return self
 
     def serve(
-        self, netuid: int, subtensor: Optional[bittensor.subtensor] = None
+        self,
+        netuid: int,
+        subtensor: Optional[bittensor.subtensor] = None,
+        certificate: Optional[Certificate] = None,
     ) -> "bittensor.axon":
         """
         Serves the Axon on the specified subtensor connection using the configured wallet. This method
@@ -848,7 +852,7 @@ class axon:
             to start receiving and processing requests from other neurons.
         """
         if subtensor is not None and hasattr(subtensor, "serve_axon"):
-            subtensor.serve_axon(netuid=netuid, axon=self)
+            subtensor.serve_axon(netuid=netuid, axon=self, certificate=certificate)
         return self
 
     async def default_verify(self, synapse: bittensor.Synapse):
