@@ -239,7 +239,7 @@ def process_weights_for_netuid(
     bittensor.logging.debug("max_weight_limit", max_weight_limit)
 
     # Find all non zero weights.
-    non_zero_weight_idx = np.argwhere(weights > 0).squeeze()
+    non_zero_weight_idx = np.argwhere(weights > 0).squeeze(axis=1)
     non_zero_weight_uids = uids[non_zero_weight_idx]
     non_zero_weights = weights[non_zero_weight_idx]
     if non_zero_weights.size == 0 or metagraph.n < min_allowed_weights:
