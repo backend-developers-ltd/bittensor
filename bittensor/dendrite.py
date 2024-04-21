@@ -155,7 +155,9 @@ class dendrite(torch.nn.Module):
 
         """
         if self._session is None:
-            self._session = aiohttp.ClientSession()
+            self._session = aiohttp.ClientSession(
+                headers={"User-Agent": f"bittensor/{bittensor.__version__}"}
+            )
         return self._session
 
     def close_session(self):
