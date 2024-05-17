@@ -1408,7 +1408,7 @@ class AxonMiddleware(BaseHTTPMiddleware):
 
             # Raise an exception to stop the process and return an appropriate error message to the requester.
             raise RunException(
-                f"Internal server error with error: {str(e)}", synapse=synapse
+                f"Internal server error with error: {type(e)}", synapse=synapse
             )
 
         # Return the starlet response
