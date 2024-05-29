@@ -44,7 +44,6 @@ from bittensor.utils import torch, weight_utils
 from .chain_data import (
     NeuronInfo,
     DelegateInfo,
-    DelegateInfoLite,
     PrometheusInfo,
     SubnetInfo,
     SubnetHyperparameters,
@@ -105,6 +104,7 @@ from .utils.balance import Balance
 from .utils.registration import POWSolution
 from .utils.registration import legacy_torch_api_compat
 from .utils.subtensor import get_subtensor_errors
+from .utils.registration import legacy_torch_api_compat
 
 KEY_NONCE: Dict[str, int] = {}
 
@@ -613,7 +613,6 @@ class Subtensor:
     ) -> bool:
         """
         Set delegate hotkey take
-
         Args:
             wallet (bittensor.wallet): The wallet containing the hotkey to be nominated.
             delegate_ss58 (str, optional): Hotkey
@@ -4285,40 +4284,6 @@ class Subtensor:
 
         return DelegateInfo.from_vec_u8(result)
 
-    def get_delegates_lite(self, block: Optional[int] = None) -> List[DelegateInfoLite]:
-        """
-        Retrieves a lighter list of all delegate neurons within the Bittensor network. This function provides an
-        overview of the neurons that are actively involved in the network's delegation system.
-
-        Analyzing the delegate population offers insights into the network's governance dynamics and the distribution
-        of trust and responsibility among participating neurons.
-
-        This is a lighter version of :func:`get_delegates`.
-
-        Args:
-            block (Optional[int], optional): The blockchain block number for the query.
-
-        Returns:
-            List[DelegateInfoLite]: A list of ``DelegateInfoLite`` objects detailing each delegate's characteristics.
-
-        """
-
-        @retry(delay=1, tries=3, backoff=2, max_delay=4, logger=_logger)
-        def make_substrate_call_with_retry():
-            block_hash = None if block is None else self.substrate.get_block_hash(block)
-
-            return self.substrate.rpc_request(
-                method="delegateInfo_getDelegatesLite",  # custom rpc method
-                params=[block_hash] if block_hash else [],
-            )
-
-        json_body = make_substrate_call_with_retry()
-
-        if not (result := json_body.get("result", None)):
-            return []
-
-        return [DelegateInfoLite(**d) for d in result]
-
     def get_delegates(self, block: Optional[int] = None) -> List[DelegateInfo]:
         """
         Retrieves a list of all delegate neurons within the Bittensor network. This function provides an overview of the
@@ -4326,8 +4291,6 @@ class Subtensor:
 
         Analyzing the delegate population offers insights into the network's governance dynamics and the distribution of
         trust and responsibility among participating neurons.
-
-        For a lighter version of this function, see :func:`get_delegates_lite`.
 
         Args:
             block (Optional[int], optional): The blockchain block number for the query.
