@@ -45,6 +45,7 @@ from bittensor.btlogging import logging as _logger
 from bittensor.utils import torch, weight_utils, format_error_message
 from .chain_data import (
     DelegateInfoLite,
+    NeuronCertificate,
     NeuronInfo,
     DelegateInfo,
     PrometheusInfo,
@@ -115,6 +116,7 @@ from .utils import (
     ss58_to_vec_u8,
     U64_NORMALIZED_FLOAT,
     networking,
+    Certificate,
 )
 from .utils.balance import Balance
 from .utils.registration import POWSolution
@@ -1814,6 +1816,7 @@ class Subtensor:
         placeholder2: int = 0,
         wait_for_inclusion: bool = False,
         wait_for_finalization=True,
+        certificate: Optional[Certificate] = None,
     ) -> bool:
         """
         Registers a neuron's serving endpoint on the Bittensor network. This function announces the
@@ -1850,6 +1853,7 @@ class Subtensor:
             placeholder2,
             wait_for_inclusion,
             wait_for_finalization,
+            certificate=certificate,
         )
 
     def serve_axon(
@@ -1858,6 +1862,7 @@ class Subtensor:
         axon: "bittensor.axon",
         wait_for_inclusion: bool = False,
         wait_for_finalization: bool = True,
+        certificate: Optional[Certificate] = None,
     ) -> bool:
         """
         Registers an Axon serving endpoint on the Bittensor network for a specific neuron. This function
@@ -1877,7 +1882,12 @@ class Subtensor:
         computing infrastructure, contributing to the collective intelligence of Bittensor.
         """
         return serve_axon_extrinsic(
-            self, netuid, axon, wait_for_inclusion, wait_for_finalization
+            self,
+            netuid,
+            axon,
+            wait_for_inclusion,
+            wait_for_finalization,
+            certificate=certificate,
         )
 
     def _do_serve_axon(
@@ -1904,11 +1914,17 @@ class Subtensor:
         enhancing the decentralized computation capabilities of Bittensor.
         """
 
+        if call_params["certificate"] is None:
+            del call_params["certificate"]
+            call_function = "serve_axon"
+        else:
+            call_function = "serve_axon_tls"
+
         @retry(delay=1, tries=3, backoff=2, max_delay=4, logger=_logger)
         def make_substrate_call_with_retry():
             call = self.substrate.compose_call(
                 call_module="SubtensorModule",
-                call_function="serve_axon",
+                call_function=call_function,
                 call_params=call_params,
             )
             extrinsic = self.substrate.create_signed_extrinsic(
@@ -5143,6 +5159,41 @@ class Subtensor:
             return NeuronInfo.get_null_neuron()
 
         return NeuronInfo.from_vec_u8(result)
+
+    def get_neuron_certificate(
+        self, uid: int, netuid: int, block: Optional[int] = None
+    ) -> Optional[Certificate]:
+        """
+        Retrieves the TLS certificate for a specific neuron identified by its unique identifier (UID)
+        within a specified subnet (netuid) of the Bittensor network.
+        Args:
+            uid (int): The unique identifier of the neuron.
+            netuid (int): The unique identifier of the subnet.
+            block (Optional[int], optional): The blockchain block number for the query.
+
+        Returns:
+            Optional[Certificate]: the certificate of the neuron if found, ``None`` otherwise.
+
+        This function is used for certificate discovery for setting up mutual tls communication between neurons
+        """
+
+        @retry(delay=2, tries=3, backoff=2, max_delay=4, logger=_logger)
+        def make_substrate_call_with_retry():
+            block_hash = None if block == None else self.substrate.get_block_hash(block)
+            params = [netuid, uid]
+            if block_hash:
+                params = params + [block_hash]
+            return self.substrate.rpc_request(
+                method="neuronInfo_getNeuronCertificate",
+                params=params,  # custom rpc method
+            )
+
+        json_body = make_substrate_call_with_retry()
+
+        if not (result := json_body.get("result", None)):
+            return None
+
+        return NeuronCertificate.from_vec_u8(result)
 
     def neurons(self, netuid: int, block: Optional[int] = None) -> List[NeuronInfo]:
         """
