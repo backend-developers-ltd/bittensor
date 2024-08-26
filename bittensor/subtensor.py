@@ -5161,13 +5161,13 @@ class Subtensor:
         return NeuronInfo.from_vec_u8(result)
 
     def get_neuron_certificate(
-        self, uid: int, netuid: int, block: Optional[int] = None
+        self, hotkey: str, netuid: int, block: Optional[int] = None
     ) -> Optional[Certificate]:
         """
         Retrieves the TLS certificate for a specific neuron identified by its unique identifier (UID)
         within a specified subnet (netuid) of the Bittensor network.
         Args:
-            uid (int): The unique identifier of the neuron.
+            hotkey (str): The hotkey to query.
             netuid (int): The unique identifier of the subnet.
             block (Optional[int], optional): The blockchain block number for the query.
 
@@ -5177,23 +5177,18 @@ class Subtensor:
         This function is used for certificate discovery for setting up mutual tls communication between neurons
         """
 
-        @retry(delay=2, tries=3, backoff=2, max_delay=4, logger=_logger)
-        def make_substrate_call_with_retry():
-            block_hash = None if block == None else self.substrate.get_block_hash(block)
-            params = [netuid, uid]
-            if block_hash:
-                params = params + [block_hash]
-            return self.substrate.rpc_request(
-                method="neuronInfo_getNeuronCertificate",
-                params=params,  # custom rpc method
-            )
-
-        json_body = make_substrate_call_with_retry()
-
-        if not (result := json_body.get("result", None)):
+        certificate = self.query_module(
+            module="SubtensorModule",
+            name="NeuronCertificates",
+            block=block,
+            params=[netuid, hotkey],
+        )
+        if not hasattr(certificate, "serialize"):
             return None
-
-        return NeuronCertificate.from_vec_u8(result)
+        certificate = certificate.serialize()
+        if not certificate:
+            return None
+        return certificate.get("certificate", None)
 
     def neurons(self, netuid: int, block: Optional[int] = None) -> List[NeuronInfo]:
         """
