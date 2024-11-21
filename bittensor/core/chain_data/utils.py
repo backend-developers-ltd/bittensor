@@ -242,7 +242,6 @@ custom_rpc_type_registry = {
                 ["adjustment_alpha", "Compact<u64>"],
                 ["difficulty", "Compact<u64>"],
                 ["commit_reveal_weights_interval", "Compact<u64>"],
-                ["commit_reveal_weights_enabled", "bool"],
                 ["alpha_high", "Compact<u16>"],
                 ["alpha_low", "Compact<u16>"],
                 ["liquid_alpha_enabled", "bool"],

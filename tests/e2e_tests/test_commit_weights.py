@@ -9,7 +9,6 @@ from bittensor.utils.weight_utils import convert_weights_and_uids_for_emit
 from tests.e2e_tests.utils.chain_interactions import (
     add_stake,
     register_subnet,
-    sudo_set_hyperparameter_bool,
     sudo_set_hyperparameter_values,
     wait_interval,
 )
@@ -51,19 +50,6 @@ async def test_commit_and_reveal_weights(local_chain):
 
     # Stake to become to top neuron after the first epoch
     add_stake(local_chain, alice_wallet, Balance.from_tao(100_000))
-
-    # Enable commit_reveal on the subnet
-    assert sudo_set_hyperparameter_bool(
-        local_chain,
-        alice_wallet,
-        "sudo_set_commit_reveal_weights_enabled",
-        True,
-        netuid,
-    ), "Unable to enable commit reveal on the subnet"
-
-    assert subtensor.get_subnet_hyperparameters(
-        netuid=netuid,
-    ).commit_reveal_weights_enabled, "Failed to enable commit/reveal"
 
     # Lower the commit_reveal interval
     assert sudo_set_hyperparameter_values(

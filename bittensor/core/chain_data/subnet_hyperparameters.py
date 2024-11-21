@@ -33,7 +33,6 @@ class SubnetHyperparameters:
         adjustment_alpha (int): Alpha value for adjustments.
         difficulty (int): Difficulty level.
         commit_reveal_weights_interval (int): Interval for commit-reveal weights.
-        commit_reveal_weights_enabled (bool): Flag indicating if commit-reveal weights are enabled.
         alpha_high (int): High value of alpha.
         alpha_low (int): Low value of alpha.
         liquid_alpha_enabled (bool): Flag indicating if liquid alpha is enabled.
@@ -62,7 +61,6 @@ class SubnetHyperparameters:
     adjustment_alpha: int
     difficulty: int
     commit_reveal_weights_interval: int
-    commit_reveal_weights_enabled: bool
     alpha_high: int
     alpha_low: int
     liquid_alpha_enabled: bool
@@ -105,7 +103,6 @@ class SubnetHyperparameters:
             adjustment_alpha=decoded.adjustment_alpha,
             difficulty=decoded.difficulty,
             commit_reveal_weights_interval=decoded.commit_reveal_weights_interval,
-            commit_reveal_weights_enabled=decoded.commit_reveal_weights_enabled,
             alpha_high=decoded.alpha_high,
             alpha_low=decoded.alpha_low,
             liquid_alpha_enabled=decoded.liquid_alpha_enabled,

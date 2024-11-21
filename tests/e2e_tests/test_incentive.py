@@ -8,7 +8,6 @@ from tests.e2e_tests.utils.chain_interactions import (
     add_stake,
     register_subnet,
     wait_epoch,
-    sudo_set_hyperparameter_bool,
 )
 from tests.e2e_tests.utils.e2e_test_utils import (
     setup_wallet,
@@ -159,19 +158,6 @@ async def test_incentive(local_chain):
 
     # Wait until next epoch
     await wait_epoch(subtensor)
-
-    # Enable commit_reveal on the subnet
-    assert sudo_set_hyperparameter_bool(
-        local_chain,
-        alice_wallet,
-        "sudo_set_commit_reveal_weights_enabled",
-        True,
-        netuid,
-    ), "Unable to enable commit reveal on the subnet"
-
-    assert subtensor.get_subnet_hyperparameters(
-        netuid=netuid,
-    ).commit_reveal_weights_enabled, "Failed to enable commit/reveal"
 
     # Commit weights by Alice on the subnet
     uids = [1]
