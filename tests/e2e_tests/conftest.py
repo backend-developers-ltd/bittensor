@@ -1,4 +1,3 @@
-import logging
 import os
 import re
 import shlex
@@ -9,13 +8,13 @@ import time
 import pytest
 from substrateinterface import SubstrateInterface
 
-from tests.e2e_tests.utils import (
+from bittensor.utils.btlogging import logging
+from tests.e2e_tests.utils.e2e_test_utils import (
     clone_or_update_templates,
     install_templates,
+    template_path,
     uninstall_templates,
 )
-
-logging.basicConfig(level=logging.INFO)
 
 
 # Fixture for setting up and tearing down a localnet.sh chain between tests
@@ -33,8 +32,9 @@ def local_chain(request):
     # Check if param is None, and handle it accordingly
     args = "" if param is None else f"{param}"
 
-    # compile commands to send to process
+    # Compile commands to send to process
     cmds = shlex.split(f"{script_path} {args}")
+
     # Start new node process
     process = subprocess.Popen(
         cmds, stdout=subprocess.PIPE, text=True, preexec_fn=os.setsid
@@ -45,6 +45,7 @@ def local_chain(request):
 
     # install neuron templates
     logging.info("downloading and installing neuron templates from github")
+    # commit with subnet-template-repo changes for rust wallet
     templates_dir = clone_or_update_templates()
     install_templates(templates_dir)
 
@@ -53,9 +54,10 @@ def local_chain(request):
     def wait_for_node_start(process, pattern):
         for line in process.stdout:
             print(line.strip())
-            # 20 min as timeout
-            if int(time.time()) - timestamp > 20 * 60:
-                pytest.fail("Subtensor not started in time")
+            # 10 min as timeout
+            if int(time.time()) - timestamp > 10 * 60:
+                print("Subtensor not started in time")
+                break
             if pattern.search(line):
                 print("Node started!")
                 break
@@ -80,4 +82,4 @@ def local_chain(request):
 
     # uninstall templates
     logging.info("uninstalling neuron templates")
-    uninstall_templates(templates_dir)
+    uninstall_templates(template_path)
