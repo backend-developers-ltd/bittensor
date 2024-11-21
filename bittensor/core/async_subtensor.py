@@ -38,7 +38,6 @@ from bittensor.core.settings import (
 )
 from bittensor.core.settings import version_as_int
 from bittensor.utils import (
-    torch,
     ss58_to_vec_u8,
     format_error_message,
     decode_hex_identity_dict,

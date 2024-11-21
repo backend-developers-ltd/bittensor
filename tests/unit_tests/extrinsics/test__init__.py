@@ -1,7 +1,6 @@
 """Tests for bittensor/extrinsics/__ini__ module."""
 
 from bittensor.utils import format_error_message
-from tests.unit_tests.extrinsics.test_commit_weights import subtensor
 
 
 def test_format_error_message_with_right_error_message(mocker):

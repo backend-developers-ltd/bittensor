@@ -1171,7 +1171,7 @@ class AsyncSubstrateInterface:
                             extrinsic_decoder.decode(check_remaining=True)
                             block_data["extrinsics"][idx] = extrinsic_decoder
 
-                        except Exception as e:
+                        except Exception:
                             if not ignore_decoding_errors:
                                 raise
                             block_data["extrinsics"][idx] = None

@@ -116,7 +116,7 @@ class Config(DefaultMunch):
                 + "/"
                 + vars(parser.parse_known_args(args)[0])["config"]
             )
-        except Exception as e:
+        except Exception:
             config_file_path = None
 
         # Parse args not strict
