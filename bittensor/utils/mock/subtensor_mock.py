@@ -886,18 +886,6 @@ class MockSubtensor(Subtensor):
     ) -> tuple[bool, Optional[str]]:
         return True, None
 
-    def do_set_weights(
-        self,
-        wallet: "Wallet",
-        netuid: int,
-        uids: int,
-        vals: list[int],
-        version_key: int,
-        wait_for_inclusion: bool = False,
-        wait_for_finalization: bool = True,
-    ) -> tuple[bool, Optional[str]]:
-        return True, None
-
     def do_serve_axon(
         self,
         wallet: "Wallet",

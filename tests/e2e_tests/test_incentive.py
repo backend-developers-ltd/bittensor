@@ -8,6 +8,7 @@ from tests.e2e_tests.utils.chain_interactions import (
     add_stake,
     register_subnet,
     wait_epoch,
+    sudo_set_hyperparameter_bool,
 )
 from tests.e2e_tests.utils.e2e_test_utils import (
     setup_wallet,
@@ -15,7 +16,11 @@ from tests.e2e_tests.utils.e2e_test_utils import (
     templates_repo,
 )
 from bittensor.utils.balance import Balance
-from bittensor.core.extrinsics.set_weights import do_set_weights
+from bittensor.utils.weight_utils import generate_weight_hash
+from bittensor.core.extrinsics.commit_weights import (
+    do_commit_weights,
+    do_reveal_weights,
+)
 from bittensor.core.metagraph import Metagraph
 
 
@@ -155,20 +160,58 @@ async def test_incentive(local_chain):
     # Wait until next epoch
     await wait_epoch(subtensor)
 
-    # Set weights by Alice on the subnet
-    do_set_weights(
+    # Enable commit_reveal on the subnet
+    assert sudo_set_hyperparameter_bool(
+        local_chain,
+        alice_wallet,
+        "sudo_set_commit_reveal_weights_enabled",
+        True,
+        netuid,
+    ), "Unable to enable commit reveal on the subnet"
+
+    assert subtensor.get_subnet_hyperparameters(
+        netuid=netuid,
+    ).commit_reveal_weights_enabled, "Failed to enable commit/reveal"
+
+    # Commit weights by Alice on the subnet
+    uids = [1]
+    weights = [65535]
+    salt = [1]
+    version_key = 0
+    commit_hash = generate_weight_hash(
+        address=alice_wallet.hotkey.ss58_address,
+        netuid=netuid,
+        uids=list(uids),
+        values=list(weights),
+        salt=salt,
+        version_key=version_key,
+    )
+    do_commit_weights(
         self=subtensor,
         wallet=alice_wallet,
-        uids=[1],
-        vals=[65535],
         netuid=netuid,
-        version_key=0,
+        commit_hash=commit_hash,
         wait_for_inclusion=True,
         wait_for_finalization=True,
-        period=5 * FAST_BLOCKS_SPEEDUP_FACTOR,
     )
-    print("Alice neuron set weights successfully")
 
+    # Wait until next epoch
+    await wait_epoch(subtensor)
+
+    # Reveal weights by Alice on the subnet
+    do_reveal_weights(
+        self=subtensor,
+        wallet=alice_wallet,
+        uids=uids,
+        netuid=netuid,
+        values=weights,
+        salt=salt,
+        version_key=version_key,
+        wait_for_inclusion=True,
+        wait_for_finalization=True,
+    )
+
+    # Wait until next epoch
     await wait_epoch(subtensor)
 
     # Refresh metagraph

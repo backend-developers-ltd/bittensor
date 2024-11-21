@@ -1123,65 +1123,6 @@ def test_is_hotkey_registered_with_netuid(subtensor, mocker):
     assert result == mocked_is_hotkey_registered_on_subnet.return_value
 
 
-def test_set_weights(subtensor, mocker):
-    """Successful set_weights call."""
-    # Preps
-    fake_wallet = mocker.MagicMock()
-    fake_netuid = 1
-    fake_uids = [2, 4]
-    fake_weights = [0.4, 0.6]
-    fake_wait_for_inclusion = False
-    fake_wait_for_finalization = False
-    fake_max_retries = 5
-
-    expected_result = (True, None)
-
-    mocked_get_uid_for_hotkey_on_subnet = mocker.MagicMock()
-    subtensor.get_uid_for_hotkey_on_subnet = mocked_get_uid_for_hotkey_on_subnet
-
-    mocked_blocks_since_last_update = mocker.MagicMock(return_value=2)
-    subtensor.blocks_since_last_update = mocked_blocks_since_last_update
-
-    mocked_weights_rate_limit = mocker.MagicMock(return_value=1)
-    subtensor.weights_rate_limit = mocked_weights_rate_limit
-
-    mocked_set_weights_extrinsic = mocker.patch.object(
-        subtensor_module, "set_weights_extrinsic", return_value=expected_result
-    )
-
-    # Call
-    result = subtensor.set_weights(
-        wallet=fake_wallet,
-        netuid=fake_netuid,
-        uids=fake_uids,
-        weights=fake_weights,
-        version_key=settings.version_as_int,
-        wait_for_inclusion=fake_wait_for_inclusion,
-        wait_for_finalization=fake_wait_for_finalization,
-        max_retries=fake_max_retries,
-    )
-
-    # Asserts
-    mocked_get_uid_for_hotkey_on_subnet.assert_called_once_with(
-        fake_wallet.hotkey.ss58_address, fake_netuid
-    )
-    mocked_blocks_since_last_update.assert_called_with(
-        fake_netuid, mocked_get_uid_for_hotkey_on_subnet.return_value
-    )
-    mocked_weights_rate_limit.assert_called_with(fake_netuid)
-    mocked_set_weights_extrinsic.assert_called_with(
-        subtensor=subtensor,
-        wallet=fake_wallet,
-        netuid=fake_netuid,
-        uids=fake_uids,
-        weights=fake_weights,
-        version_key=settings.version_as_int,
-        wait_for_inclusion=fake_wait_for_inclusion,
-        wait_for_finalization=fake_wait_for_finalization,
-    )
-    assert result == expected_result
-
-
 def test_serve_axon(subtensor, mocker):
     """Tests successful serve_axon call."""
     # Prep

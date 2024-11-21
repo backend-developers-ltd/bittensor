@@ -184,50 +184,6 @@ class TestSubtensor(unittest.TestCase):
                     wait_for_inclusion=True,
                 )
 
-    def test_set_weights(self):
-        chain_weights = [0]
-
-        self.subtensor.set_weights = MagicMock(return_value=True)
-        self.subtensor.do_set_weights = MagicMock(return_value=(True, None))
-
-        success = self.subtensor.set_weights(
-            wallet=self.wallet,
-            netuid=3,
-            uids=[1],
-            weights=chain_weights,
-        )
-        assert success is True
-
-    def test_set_weights_inclusion(self):
-        chain_weights = [0]
-        self.subtensor.do_set_weights = MagicMock(return_value=(True, None))
-        self.subtensor.set_weights = MagicMock(return_value=True)
-
-        success = self.subtensor.set_weights(
-            wallet=self.wallet,
-            netuid=1,
-            uids=[1],
-            weights=chain_weights,
-            wait_for_inclusion=True,
-        )
-        assert success is True
-
-    def test_set_weights_failed(self):
-        chain_weights = [0]
-        self.subtensor.do_set_weights = MagicMock(
-            return_value=(False, "Mock failure message")
-        )
-        self.subtensor.set_weights = MagicMock(return_value=False)
-
-        fail = self.subtensor.set_weights(
-            wallet=self.wallet,
-            netuid=3,
-            uids=[1],
-            weights=chain_weights,
-            wait_for_inclusion=True,
-        )
-        assert fail is False
-
     def test_get_balance(self):
         fake_coldkey = get_mock_coldkey(0)
         balance = self.subtensor.get_balance(address=fake_coldkey)

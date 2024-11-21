@@ -49,7 +49,6 @@ from bittensor.core.extrinsics.serving import (
     publish_metadata,
     get_metadata,
 )
-from bittensor.core.extrinsics.set_weights import set_weights_extrinsic
 from bittensor.core.extrinsics.transfer import (
     transfer_extrinsic,
 )
@@ -112,8 +111,8 @@ class Subtensor:
         netuid = 1
         success = finney_subtensor.register(wallet=wallet, netuid=netuid)
 
-        # Set inter-neuronal weights for collaborative learning.
-        success = finney_subtensor.set_weights(wallet=wallet, netuid=netuid, uids=[...], weights=[...])
+        # Commit inter-neuronal weights for collaborative learning.
+        success = finney_subtensor.commit_weights(wallet=wallet, netuid=netuid, salt=[...], uids=[...], weights=[...])
 
         # Get the metagraph for a specific subnet using given subtensor connection
         metagraph = finney_subtensor.metagraph(netuid=netuid)
@@ -781,65 +780,6 @@ class Subtensor:
             return self.is_hotkey_registered_any(hotkey_ss58, block)
         else:
             return self.is_hotkey_registered_on_subnet(hotkey_ss58, netuid, block)
-
-    # Not used in Bittensor, but is actively used by the community in almost all subnets
-    def set_weights(
-        self,
-        wallet: "Wallet",
-        netuid: int,
-        uids: Union[NDArray[np.int64], "torch.LongTensor", list],
-        weights: Union[NDArray[np.float32], "torch.FloatTensor", list],
-        version_key: int = settings.version_as_int,
-        wait_for_inclusion: bool = False,
-        wait_for_finalization: bool = False,
-        max_retries: int = 5,
-    ) -> tuple[bool, str]:
-        """
-        Sets the inter-neuronal weights for the specified neuron. This process involves specifying the influence or trust a neuron places on other neurons in the network, which is a fundamental aspect of Bittensor's decentralized learning architecture.
-
-        Args:
-            wallet (bittensor_wallet.Wallet): The wallet associated with the neuron setting the weights.
-            netuid (int): The unique identifier of the subnet.
-            uids (Union[NDArray[np.int64], torch.LongTensor, list]): The list of neuron UIDs that the weights are being set for.
-            weights (Union[NDArray[np.float32], torch.FloatTensor, list]): The corresponding weights to be set for each UID.
-            version_key (int): Version key for compatibility with the network.  Default is ``int representation of Bittensor version.``.
-            wait_for_inclusion (bool): Waits for the transaction to be included in a block. Default is ``False``.
-            wait_for_finalization (bool): Waits for the transaction to be finalized on the blockchain. Default is ``False``.
-            max_retries (int): The number of maximum attempts to set weights. Default is ``5``.
-
-        Returns:
-            tuple[bool, str]: ``True`` if the setting of weights is successful, False otherwise. And `msg`, a string value describing the success or potential error.
-
-        This function is crucial in shaping the network's collective intelligence, where each neuron's learning and contribution are influenced by the weights it sets towards others【81†source】.
-        """
-        uid = self.get_uid_for_hotkey_on_subnet(wallet.hotkey.ss58_address, netuid)
-        retries = 0
-        success = False
-        message = "No attempt made. Perhaps it is too soon to set weights!"
-        while (
-            self.blocks_since_last_update(netuid, uid) > self.weights_rate_limit(netuid)  # type: ignore
-            and retries < max_retries
-        ):
-            try:
-                logging.info(
-                    f"Setting weights for subnet #{netuid}. Attempt {retries + 1} of {max_retries}."
-                )
-                success, message = set_weights_extrinsic(
-                    subtensor=self,
-                    wallet=wallet,
-                    netuid=netuid,
-                    uids=uids,
-                    weights=weights,
-                    version_key=version_key,
-                    wait_for_inclusion=wait_for_inclusion,
-                    wait_for_finalization=wait_for_finalization,
-                )
-            except Exception as e:
-                logging.error(f"Error setting weights: {e}")
-            finally:
-                retries += 1
-
-        return success, message
 
     @legacy_torch_api_compat
     def root_set_weights(

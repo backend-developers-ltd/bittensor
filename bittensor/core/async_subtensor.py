@@ -28,10 +28,7 @@ from bittensor.core.extrinsics.async_root import (
     root_register_extrinsic,
 )
 from bittensor.core.extrinsics.async_transfer import transfer_extrinsic
-from bittensor.core.extrinsics.async_weights import (
-    commit_weights_extrinsic,
-    set_weights_extrinsic,
-)
+from bittensor.core.extrinsics.async_weights import commit_weights_extrinsic
 from bittensor.core.settings import (
     TYPE_REGISTRY,
     DEFAULTS,
@@ -1468,65 +1465,6 @@ class AsyncSubtensor:
             output_in_place=output_in_place,
             log_verbose=verbose,
         )
-
-    async def set_weights(
-        self,
-        wallet: "Wallet",
-        netuid: int,
-        uids: Union[NDArray[np.int64], "torch.LongTensor", list],
-        weights: Union[NDArray[np.float32], "torch.FloatTensor", list],
-        version_key: int = version_as_int,
-        wait_for_inclusion: bool = False,
-        wait_for_finalization: bool = False,
-        max_retries: int = 5,
-    ):
-        """
-        Sets the inter-neuronal weights for the specified neuron. This process involves specifying the influence or trust a neuron places on other neurons in the network, which is a fundamental aspect of Bittensor's decentralized learning architecture.
-
-        Args:
-            wallet (bittensor_wallet.Wallet): The wallet associated with the neuron setting the weights.
-            netuid (int): The unique identifier of the subnet.
-            uids (Union[NDArray[np.int64], torch.LongTensor, list]): The list of neuron UIDs that the weights are being set for.
-            weights (Union[NDArray[np.float32], torch.FloatTensor, list]): The corresponding weights to be set for each UID.
-            version_key (int): Version key for compatibility with the network.  Default is ``int representation of Bittensor version.``.
-            wait_for_inclusion (bool): Waits for the transaction to be included in a block. Default is ``False``.
-            wait_for_finalization (bool): Waits for the transaction to be finalized on the blockchain. Default is ``False``.
-            max_retries (int): The number of maximum attempts to set weights. Default is ``5``.
-
-        Returns:
-            tuple[bool, str]: ``True`` if the setting of weights is successful, False otherwise. And `msg`, a string value describing the success or potential error.
-
-        This function is crucial in shaping the network's collective intelligence, where each neuron's learning and contribution are influenced by the weights it sets towards others【81†source】.
-        """
-        uid = await self.get_uid_for_hotkey_on_subnet(
-            wallet.hotkey.ss58_address, netuid
-        )
-        retries = 0
-        success = False
-        message = "No attempt made. Perhaps it is too soon to set weights!"
-        while retries < max_retries and await self.blocks_since_last_update(
-            netuid, uid
-        ) > await self.weights_rate_limit(netuid):
-            try:
-                logging.info(
-                    f"Setting weights for subnet #[blue]{netuid}[/blue]. Attempt [blue]{retries + 1} of {max_retries}[/blue]."
-                )
-                success, message = await set_weights_extrinsic(
-                    subtensor=self,
-                    wallet=wallet,
-                    netuid=netuid,
-                    uids=uids,
-                    weights=weights,
-                    version_key=version_key,
-                    wait_for_inclusion=wait_for_inclusion,
-                    wait_for_finalization=wait_for_finalization,
-                )
-            except Exception as e:
-                logging.error(f"Error setting weights: {e}")
-            finally:
-                retries += 1
-
-        return success, message
 
     async def root_set_weights(
         self,

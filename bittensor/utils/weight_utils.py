@@ -179,7 +179,7 @@ def convert_bond_uids_and_vals_to_tensor(
     return row_bonds
 
 
-# This is used by the community via `bittensor.api.extrinsics.set_weights.set_weights_extrinsic`
+# This is used by the community via legacy `bittensor.api.extrinsics.set_weights.set_root_weights_extrinsic`
 def convert_weights_and_uids_for_emit(
     uids: Union[NDArray[np.int64], "torch.LongTensor"],
     weights: Union[NDArray[np.float32], "torch.FloatTensor"],
